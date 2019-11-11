@@ -30,7 +30,7 @@ library(ggthemes)
 library(data.table)
 library(grid)
 library(gridExtra)
-library(knitr)
+#library(knitr)
 library(kableExtra)
 
 ```
@@ -38,9 +38,33 @@ library(kableExtra)
 ## Load Data
 
 ```{r}
-multiple <- fread("data/multiple_choice_responses.csv", skip = 1, encoding = "UTF-8") %>% mutate_if(is_character, as_factor)
+
+multiple <- fread("data2019/multiple_choice_responses.csv", drop = c(4, 8, 20, 35, 48, 50, 51, 52, 53, 54, 
+                                                                      55, 69, 82, 95, 97, 110, 116, 131, 140, 148, 155, 
+                                                                      168, 181, 194, 207, 220, 233, 246), encoding = "UTF-8", skip = 1) %>% mutate_if(is_character, as_factor)
+
+questions <- fread("data2019/questions_only.csv", drop = 1)
 
 ```
+
+## Questions Table
+
+The table of questions from the 2019 Kaggle Data Science and Machine Learning Survey. There are total 34 questions asked in the survey. 
+
+```{r}
+
+questions <- gather(questions, sno , question)
+
+questions[1:34,] %>%
+  kable(format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(column = 1, width = "5em;") %>%
+  column_spec(column = 2, width = "20em;") %>%
+  scroll_box(width = "100%")
+
+```
+
+## Overview of datatable
 
 The dataset **multiple** consists of 246 columns. The column name are questions asked dusring the survey so we are going to edit the column names as we will explore our data during the EDA. 
 
@@ -48,15 +72,15 @@ The dataset **multiple** consists of 246 columns. The column name are questions 
 multiple[1:5,] %>%
   kable(format = "html") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
-        column_spec(column = c(1,3), width = "15em; min-width: 5em;") %>%
-  column_spec(column = c(1,3), width = "10em; min-width: 10em;") %>%
-        column_spec(column = 6:246, width = "25em; min-width: 25em;") %>%
+        column_spec(column = c(1,2,3), width = "15em; min-width: 15em;") %>%
+        column_spec(column = c(4), width = "10em; min-width: 10em;") %>%
+        column_spec(column = 5:218, width = "25em; min-width: 25em;") %>%
         row_spec(1:5, align = "c") %>%
         scroll_box(width = "100%")
 
 ```
 
-Since the dataset is huge. I have used [**kableExtra Package**](https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html) to generate the table in the browser.
+Since the dataset is huge. I have used [**kableExtra**](https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html) to generate the view of full datatable in the browser.
 
 ## Column Name
 
@@ -69,7 +93,9 @@ vars <- c(gender = "What is your gender? - Selected Choice",
           age = "What is your age (# years)?",
           education = "What is the highest level of formal education that you have attained or plan to attain within the next 2 years?",
           role = "Select the title most similar to your current role (or most recent title if retired): - Selected Choice",
-          salary = "What is your current yearly compensation (approximate $USD)?")
+          salary = "What is your current yearly compensation (approximate $USD)?",
+          size = "What is the size of the company where you are employed?",
+          ml_work = "Does your current employer incorporate machine learning methods into their business?")
 
 multiple <- multiple %>%
   rename(!!vars)
@@ -101,6 +127,7 @@ gen %>%
 ```
 
 There is **huge gender imbalance with 82% male and only 16% female.** This is very sad.
+
 
 # **4 Age Distribution**
 
@@ -154,7 +181,7 @@ Q. What is the highest level of formal education that you have attained or plan 
 ```{r fig.height=5, fig.cap="Fig. 4"}
 
 multiple %>%
-  mutate(education = fct_relabel(education, str_replace, c("Some college/university study without earning a bachelor’s degree"), "Some college/Uni study")) %>%
+  mutate(education = fct_relabel(education, str_replace, "Some college/university study without earning a bachelor’s degree", "Some college/Uni study")) %>%
   mutate(education = fct_relabel(education, str_replace, "No formal education past high school", "High School")) %>%
   mutate(education = fct_relabel(education, str_replace, "I prefer not to answer", "No answer")) %>%
   mutate(education = na_if(education, "")) %>%
@@ -199,4 +226,25 @@ multiple %>%
 * There are enthusiastic students at second place with around same number as **Data Scientist** forming up equivalent **21%.** Wow seems Data Sciencw is promising career :). Great!
 
 * **Statisticians** are very rare with only **1.7%.**
+
+
+# **8 Size of the company**
+
+```{r fig.height=5, fig.cap="Fig. 4"}
+multiple %>%
+  mutate(size = na_if(size, "")) %>%
+  filter(!is.na(size)) %>%
+  count(size) %>%
+  mutate(size = reorder(size, n, FUN = min), n) %>%
+  mutate(percentage = str_c(as.character(round(n/sum(n)*100,1)), "%")) %>%
+  ggplot(aes(size, n, fill = size)) +
+  geom_col() +
+  labs(x = "Size", y = "Number of respondents") + theme_hc() +
+  geom_label(aes(label = percentage)) +
+  theme(legend.position = "none") +
+  ggtitle("Size of the company") +
+  coord_flip()
+
+```
+
 

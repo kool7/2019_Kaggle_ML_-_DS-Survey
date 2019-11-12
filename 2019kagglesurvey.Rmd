@@ -1,5 +1,5 @@
 ---
-title: "2019 Kaggle Ml & DS Survey"
+title: "Indians in Data Science"
 author: "Kuldeep Singh Chouhan"
 date: "26/10/2019"
 output: 
@@ -16,7 +16,7 @@ output:
 
 Welcome to the third annual Mahcine Learning and Data Science Survey. In [*2019 Kaggle Machine Learning and Data Science Survey*](https://www.kaggle.com/c/kaggle-survey-2019) Kaggle conducted an industry-wide survey that presents a truly comprehensive view of the state of data science and machine learning. According to the description the survey has **19,717 usuable responses from 171 countries and territories** after cleaning.
 
-In this Kernel I am going to tell the rich story about a particular subset of data science and machine learning community. My focus in this kernel is on the salary distribution amoung different groups.  
+In this Kernel I am going to tell the rich story about a **The Journey Of Indians in Data Scientist**. 
 
 # **2 Loading data and libraries** {.tabset .tabset-fade .tabset-pills}
 
@@ -30,8 +30,10 @@ library(ggthemes)
 library(data.table)
 library(grid)
 library(gridExtra)
-#library(knitr)
+library(reshape2)
+library(knitr)
 library(kableExtra)
+library(janitor)
 
 ```
 
@@ -95,7 +97,8 @@ vars <- c(gender = "What is your gender? - Selected Choice",
           role = "Select the title most similar to your current role (or most recent title if retired): - Selected Choice",
           salary = "What is your current yearly compensation (approximate $USD)?",
           size = "What is the size of the company where you are employed?",
-          ml_work = "Does your current employer incorporate machine learning methods into their business?")
+          ml_work = "Does your current employer incorporate machine learning methods into their business?",
+          code_exp = "How long have you been writing code to analyze data (at work or at school)?")
 
 multiple <- multiple %>%
   rename(!!vars)
@@ -105,7 +108,7 @@ multiple <- multiple %>%
 
 # **3 Gender Distribution**
 
-Q. What is your gender? - Selected Choice"
+Let's explore what's the gender of data scientists.
 
 ```{r fig.height=5, fig.cap="Fig. 1"}
 
@@ -119,15 +122,19 @@ gen %>%
   geom_col() +
   geom_label(aes(label = percentage), position = position_dodge(width = 1)) +
   labs(x = "Gender", y = "Number of Respondents") +
-  theme_hc() +
+  theme_light() +
   theme(legend.position = "none") +
   ggtitle("Gender Distribution") +
   coord_flip()
 
 ```
 
-There is **huge gender imbalance with 82% male and only 16% female.** This is very sad.
+There is **huge gender imbalance with 82% male and only 16% female.** 
 
+```{r}
+
+
+```
 
 # **4 Age Distribution**
 
@@ -145,13 +152,13 @@ multiple %>%
   geom_col() +
   geom_label(aes(label = percentage)) +
   labs(x = "Age", y = "Number of respondents") +
-  theme_hc() +
+  theme_bw() +
   theme(legend.position = "none", axis.text.x  = element_text(angle=90, hjust=1, vjust=0.9)) +
   ggtitle("Age Distribution")
 
 ```
 
-Age distribution is right-skewed, with **the most common value being age 25-29 with 23% followed by 22-24 and 30-34 with 18% & 16% respectively.** Most of the respondents are from younger age group. I am amazed to see respondents at ages of 60+ & 70+. 
+  * Age distribution is right-skewed, with **the most common value being age 25-29 with 23% followed by 22-24 and 30-34 with 18% & 16% respectively.** Most of the respondents are from younger age group. I am amazed to see respondents at ages of 60+ & 70+. 
 
 # **5 Country**
 
@@ -205,7 +212,7 @@ multiple %>%
 
 Q. Select the title most similar to your current role (or most recent title if retired): - Selected Choice
 
-```{r fig.height=5, fig.cap="Fig. 4"}
+```{r fig.height=5, fig.cap="Fig. 5"}
 multiple %>%
   mutate(role = na_if(role, "")) %>%
   filter(!is.na(role))%>%
@@ -223,14 +230,14 @@ multiple %>%
 
   * **21%** respondents are **Data scientist and Software Engineer making 14% of the total respondents.** 
 
-* There are enthusiastic students at second place with around same number as **Data Scientist** forming up equivalent **21%.** Wow seems Data Sciencw is promising career :). Great!
-
-* **Statisticians** are very rare with only **1.7%.**
+  * There are enthusiastic students at second place with around same number as **Data Scientist** forming up equivalent **21%.** Wow seems Data Sciencw is promising career :). Great!
+  
+  * **Statisticians** are very rare with only **1.7%.**
 
 
 # **8 Size of the company**
 
-```{r fig.height=5, fig.cap="Fig. 4"}
+```{r fig.height=5, fig.cap="Fig. 6"}
 multiple %>%
   mutate(size = na_if(size, "")) %>%
   filter(!is.na(size)) %>%
@@ -246,5 +253,123 @@ multiple %>%
   coord_flip()
 
 ```
+
+
+```{r fig.height=5, fig.cap="Fig. 7" }
+multiple %>%
+  mutate(code_exp = na_if(code_exp, "")) %>%
+  filter(!is.na(code_exp)) %>%
+  count(code_exp) %>%
+  mutate(percentage = str_c(as.character(round(n/sum(n)*100,1)), "%")) %>%
+  ggplot(aes(code_exp, n, fill = code_exp)) +
+  geom_col() +
+  labs(x = "", y = "Number of respondents") + theme_hc() +
+  geom_label(aes(label = percentage)) +
+  theme(legend.position = "none") +
+  ggtitle("How long have you been writing code to analyze data?") 
+
+```
+
+
+# **Favourite Tool Of Interest** {.tabset .tabset-fade .tabset-pills}
+
+## Variables
+
+```{r}
+
+vars <- c(db_mysql =  "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - MySQL",
+          db_post = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - PostgresSQL",
+          db_sqlite = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - SQLite",
+          db_mssql = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - Microsoft SQL Server",
+          db_od = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - Oracle Database",
+          db_msaccess = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - Microsoft Access",
+          db_aws_rds = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - AWS Relational Database Service",
+          db_aws_dy = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - AWS DynamoDB",
+          db_gc = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - Google Cloud SQL",
+          db_none = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - None",
+          db_other = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - Other",
+          db_az_sql = "Which of the following relational database products do you use on a regular basis? (Select all that apply) - Selected Choice - Azure SQL Database")
+
+
+multiple <- multiple %>%
+  rename(!!vars) 
+
+```
+
+
+## Database
+
+Let's see Kagglers favourite database products. 
+
+```{r warning=FALSE, fig.height=5, fig.cap="Fig 8"}
+
+db <- multiple %>%
+  mutate(db_mysql = na_if(db_mysql, ""),
+         db_post = na_if(db_post, ""),
+         db_sqlite = na_if(db_sqlite, ""),
+         db_mssql = na_if(db_mssql, ""),
+         db_od = na_if(db_od, ""),
+         db_msaccess = na_if(db_msaccess, ""),
+         db_aws_rds = na_if(db_aws_rds, ""),
+         db_aws_dy = na_if(db_aws_dy, ""),
+         db_gc = na_if(db_gc, ""),
+         db_none = na_if(db_none, ""),
+         db_other = na_if(db_other, ""),
+         db_az_sql = na_if(db_az_sql, "")) %>%
+  gather(database, name, c(207:218)) %>%
+  mutate(name = na_if(name, "")) %>%
+  filter(!is.na(name)) 
+
+
+db %>% 
+  count(name) %>%
+  mutate(name = reorder(name, n, FUN = min), n) %>%
+  mutate(percentage = str_c(as.character(round(n/sum(n)*100,1)), "%")) %>%
+  ggplot(aes(name, n, fill = name)) +
+  geom_col() +
+  labs(x = "Gender", y = "Number of Respondents") +
+  theme_hc() +
+  geom_label(aes(label = percentage)) +
+  theme(legend.position = "none") +
+  ggtitle("Database") +
+  coord_flip()
+
+```
+
+  * Most of the Kagglers use **MySQL** on regular basis for forming up around **22%**. While the second most prefered database product is **PostgresSQL** with **15%** kagglers using it on the regular basis. 
+  
+  
+## On the basis of role
+
+```{r fig.height=5, fig.width=8,fig.cap="Fig 9"}
+
+foo <- db %>%
+  group_by(country) %>%
+  count() %>%
+  ungroup() %>%
+  top_n(6, n)
+
+db %>%
+  semi_join(foo, by = 'country') %>%
+  count(name, country) %>%
+  ggplot(aes(name, n, fill = name)) +
+  geom_col() +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        axis.text.x  = element_blank(),
+        strip.text.x = element_text(size = 7),
+        legend.title = element_blank()) +
+  guides(fill = guide_legend(ncol = 6)) +
+  labs(x = "", y = "Number of Respondents") +
+  facet_wrap(~ country, ncol = 2, scales = "free_y") +
+  ggtitle("Education in top 6 fields: note all the physics PhDs")
+
+
+```
+
+
+
+
+
 
 
